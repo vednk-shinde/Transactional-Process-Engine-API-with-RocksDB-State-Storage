@@ -1,0 +1,14 @@
+services:
+  process-engine:
+    build: .
+    ports:
+      - "8080:8080"   # REST  /v1/...
+      - "9090:9090"   # gRPC  processengine.v1.ProcessEngineService
+    environment:
+      STORE: rocksdb
+      DB_PATH: /data
+    volumes:
+      - rocksdb-data:/data
+
+volumes:
+  rocksdb-data:

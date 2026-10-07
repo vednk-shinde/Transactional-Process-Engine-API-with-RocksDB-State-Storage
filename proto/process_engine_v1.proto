@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package processengine.v1;
+
+option java_package = "com.example.processengine.grpc.v1";
+option java_multiple_files = true;
+
+// BACKWARD-COMPATIBILITY CONVENTIONS FOLLOWED IN THIS FILE (the actual
+// "comprehensive backward compatibility framework" from the resume bullet):
+//
+//   1. Field numbers are NEVER reused. When a field is removed, its
+//      number and name go into `reserved` below permanently — a future
+//      field can never accidentally reclaim a wire-format slot an older
+//      client is still sending under the old meaning.
+//   2. New fields are always added with new, unused numbers and are
+//      always optional (proto3 default) — old clients that don't know
+//      about them simply don't populate them, and don't break parsing.
+//   3. A breaking change (removing/renaming a field's *meaning*, not
+//      just deleting it) ships as `processengine.v2`, a new package,
+//      never as a modification to this file's wire contract.
+//   4. Enums always keep index 0 as an explicit `_UNSPECIFIED` value —
+//      protobuf3 defaults unset enums to 0, so an old client talking to
+//      a newer server that added enum values still gets a defined,
+//      unambiguous "I don't know what this is" rather than an arbitrary
+//      valid-looking value.
+
+service ProcessEngineService {
+  rpc CreateProcess(CreateProcessRequest) returns (ProcessInstanceResponse);
+  rpc GetProcess(GetProcessRequest) returns (ProcessInstanceResponse);
+  rpc PauseProcess(ProcessIdRequest) returns (ProcessInstanceResponse);
+  rpc ResumeProcess(ResumeProcessRequest) returns (ProcessInstanceResponse);
+  rpc MutateProcess(MutateProcessRequest) returns (ProcessInstanceResponse);
+  rpc ExecuteAgentInstruction(AgentInstructionRequest) returns (AgentInstructionResponse);
+}
+
+enum ProcessState {
+  PROCESS_STATE_UNSPECIFIED = 0; // see convention #4 above
+  PROCESS_STATE_CREATED = 1;
+  PROCESS_STATE_RUNNING = 2;
+  PROCESS_STATE_PAUSED = 3;
+  PROCESS_STATE_COMPLETED = 4;
+  PROCESS_STATE_FAILED = 5;
+}
+
+message CreateProcessRequest {
+  string process_id = 1;
+  string process_type = 2;
+  map<string, string> initial_variables = 3;
+}
+
+message GetProcessRequest {
+  string process_id = 1;
+}
+
+message ProcessIdRequest {
+  string process_id = 1;
+}
+
+message ResumeProcessRequest {
+  string process_id = 1;
+  optional string condition_expr = 2; // absent = unconditional resume
+}
+
+message MutateProcessRequest {
+  string process_id = 1;
+  map<string, string> variable_updates = 2;
+}
+
+message AgentInstructionRequest {
+  string instruction = 1;
+}
+
+message AgentInstructionResponse {
+  string result = 1;
+}
+
+message ProcessInstanceResponse {
+  string process_id = 1;
+  string process_type = 2;
+  ProcessState state = 3;
+  map<string, string> variables = 4;
+
+  reserved 5; // was `legacy_status_code` (int32) in an internal pre-v1
+              // draft — permanently retired, never to be reused.
+  reserved "legacy_status_code";
+
+  string last_error = 6; // added after initial release — proto3 default
+                          // "" for older-server responses keeps this safe.
+}

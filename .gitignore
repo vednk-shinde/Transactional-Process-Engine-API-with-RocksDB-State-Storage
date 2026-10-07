@@ -1,0 +1,13 @@
+target/
+data/
+*.class
+*.log
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+.env
+.DS_Store
+hs_err_pid*.log
